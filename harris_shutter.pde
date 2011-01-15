@@ -1,12 +1,17 @@
 import processing.video.*;
+import controlP5.*; // le gui
 Capture cap;
-int head;
+ControlP5 gui;
+int head, capWait, skipFrames;
 float r, g, b;
 PImage frames[];
 void setup() {
   size(320, 240);
   cap = new Capture(this, width, height, 120);
-  head = 0;
+  gui = new ControlP5(this);
+  // gui.addSlider(name, min, max, default, x, y, w, h)
+  gui.addSlider("skipFrames", 0, 10, 0, width / 2 - 50, height - 20, 100, 10);
+  head = capWait = skipFrames = 0;
   frames = new PImage[3];
   for(int i = 0; i < 3; i++) {
     frames[i] = createImage(width, height, RGB);
@@ -15,9 +20,11 @@ void setup() {
 }
 void draw() {
   if(cap.available()) {
-    head = (head + 1) % 3;
-    cap.read();
-    frames[head].copy(cap, 0, 0, width, height, 0, 0, width, height);
+    if(skipFrames == 0 || (capWait += 1) % skipFrames == 0) {
+      head = (head + 1) % 3;
+      cap.read();
+      frames[head].copy(cap, 0, 0, width, height, 0, 0, width, height);
+    }
   }
   loadPixels();
   for(int i = 0; i < width * height; i++) {
